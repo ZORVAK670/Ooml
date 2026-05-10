@@ -4,21 +4,20 @@ from replit import db
 
 # ================= CONFIG =================
 TOKEN = "8482095863:AAEm78Ig4tfTuVvNjj9vAE0nb4NL06jKgJ0"
-
 ADMIN_ID = 8600898029
 
-CHANNEL = "@oq_pubg_store"
-GROUP = "@ooq_store"
-
-# ================= DB =================
+# ================= DATABASE =================
 if "balance" not in db:
     db["balance"] = {}
 
 if "tasks" not in db:
-    db["tasks"] = []
-
-if "lang" not in db:
-    db["lang"] = {}
+    db["tasks"] = [
+        "https://t.me/oq_pubg_store",
+        "https://t.me/ooq_store",
+        "https://t.me/EasyEarnAppBot?start=ref_8600898029",
+        "https://t.me/easyearnofficial1222",
+        "https://t.me/easyearnpayments"
+    ]
 
 # ================= APP MENU =================
 def menu():
@@ -28,11 +27,14 @@ def menu():
             InlineKeyboardButton("📢 Tasks", callback_data="task")
         ],
         [
-            InlineKeyboardButton("➕ Submit", callback_data="submit"),
+            InlineKeyboardButton("➕ Submit Task", callback_data="submit"),
             InlineKeyboardButton("🔗 Referral", callback_data="ref")
         ],
         [
-            InlineKeyboardButton("⚙️ Language", callback_data="lang")
+            InlineKeyboardButton("📊 Leaderboard", callback_data="board")
+        ],
+        [
+            InlineKeyboardButton("⚙️ Settings", callback_data="lang")
         ]
     ])
 
@@ -41,10 +43,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
 
     db["balance"].setdefault(uid, 0)
-    db["lang"].setdefault(uid, "ps")
 
     await update.message.reply_text(
-        "🚀 Welcome to OQ App Bot\n\nChoose option:",
+        "🚀 Welcome to OQ App Bot\n\nSelect option below:",
         reply_markup=menu()
     )
 
@@ -55,46 +56,46 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await q.answer()
 
-    # WALLET
+    # 💰 WALLET
     if q.data == "bal":
         await q.message.edit_text(
             f"💰 WALLET\n\nBalance: {db['balance'].get(uid,0)} coins",
             reply_markup=menu()
         )
 
-    # TASKS
+    # 📢 TASKS
     elif q.data == "task":
-        if not db["tasks"]:
-            await q.message.edit_text("📢 No tasks available", reply_markup=menu())
-            return
+        tasks = db["tasks"]
 
-        t = db["tasks"][0]
+        text = "📢 TASK LIST:\n\n"
 
-        await q.message.edit_text(
-            f"📢 TASK\n\nJoin:\n{t['link']}\n\n💰 +2 coins",
-            reply_markup=menu()
-        )
+        for t in tasks:
+            text += f"👉 {t}\n"
 
-    # REFERRAL
+        text += "\n💰 Reward: +0.5 coins per task"
+
+        await q.message.edit_text(text, reply_markup=menu())
+
+    # 🔗 REFERRAL
     elif q.data == "ref":
-        link = f"https://t.me/YOUR_BOT_USERNAME?start={uid}"
+        link =https://t.me/Anti_zorvak_bot?start={uid}"
 
         await q.message.edit_text(
-            f"🔗 REFERRAL LINK\n\n{link}\n\nInvite = +2 coins",
+            f"🔗 REFERRAL LINK:\n{link}\n\n💰 Earn +2 coins per invite",
             reply_markup=menu()
         )
 
-    # SUBMIT
+    # ➕ SUBMIT
     elif q.data == "submit":
         if db["balance"].get(uid,0) < 30:
             await q.message.edit_text("❌ Need 30 coins", reply_markup=menu())
         else:
-            await q.message.edit_text("📩 Send: /submit @channel")
+            await q.message.edit_text("📩 Use: /submit @channel", reply_markup=menu())
 
-    # LANGUAGE
+    # ⚙️ SETTINGS
     elif q.data == "lang":
         await q.message.edit_text(
-            "⚙️ Choose Language",
+            "⚙️ SETTINGS\n\nChoose language:",
             reply_markup=InlineKeyboardMarkup([
                 [
                     InlineKeyboardButton("🇦🇫 پښتو", callback_data="ps"),
@@ -105,21 +106,17 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     elif q.data in ["ps","fa","en"]:
-        db["lang"][uid] = q.data
-        await q.message.edit_text("✅ Updated", reply_markup=menu())
+        await q.message.edit_text("✅ Language updated", reply_markup=menu())
 
-# ================= TASK COMPLETE =================
+# ================= DONE TASK =================
 async def done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
 
-    db["balance"][uid] = db["balance"].get(uid,0) + 2
+    db["balance"][uid] = db["balance"].get(uid,0) + 0.5
 
-    if db["tasks"]:
-        db["tasks"].pop(0)
+    await update.message.reply_text("✅ +0.5 coins earned")
 
-    await update.message.reply_text("✅ +2 coins earned")
-
-# ================= SUBMIT =================
+# ================= SUBMIT TASK =================
 async def submit(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
 
@@ -133,14 +130,10 @@ async def submit(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     link = context.args[0]
 
-    db["tasks"].append({
-        "link": link,
-        "owner": uid
-    })
-
+    db["tasks"].append(link)
     db["balance"][uid] = 0
 
-    await update.message.reply_text("✅ Added to task pool")
+    await update.message.reply_text("✅ Task added successfully")
 
 # ================= RUN =================
 app = ApplicationBuilder().token(TOKEN).build()
